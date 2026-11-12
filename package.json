@@ -1,7 +1,7 @@
 {
   "name": "dsh-blender-preview",
   "version": "0.2.0",
-  "description": "Scaffold for a DeepSeek Harness Blender preview plugin: one host row, no UI yet, no network calls, no telemetry; depends on dsh-blender@^0.2.4 (at boot it only checks that dsh-blender is installed and mounted in the profiles that use it, logging the exact mount command when not — non-mutating); planned feature: .blend to cached local GLB via local Blender; no postinstall; uninstall removes the row.",
+  "description": "Scaffold for a DeepSeek Harness Blender preview plugin: one host row, no UI yet, no network calls, no telemetry; depends on dsh-blender@^0.2.4 — boot self-check only, logs the mount command if not installed/mounted (non-mutating); planned feature: .blend to cached local GLB via local Blender; no postinstall; uninstall removes the row.",
   "dependencies": {
     "dsh-blender": "^0.2.4"
   },

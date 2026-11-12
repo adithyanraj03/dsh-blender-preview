@@ -1,0 +1,71 @@
+{
+  "name": "dsh-blender-preview",
+  "version": "0.1.0",
+  "description": "Scaffold for a DeepSeek Harness Blender preview plugin: mounts one host row with no UI yet, no network calls and no telemetry of its own; the planned feature exports .blend files to a cached local GLB via a local Blender install (no cloud, no keys), the package runs no postinstall, and uninstall removes the row.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./client": "./src/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/index.js",
+    "src/client.js",
+    "cordis.patch.yml",
+    "scripts/test-harness.mjs",
+    "scripts/make-banner.py",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "assets/icon.png",
+    "assets/banner-light.png",
+    "assets/banner-dark.png",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node scripts/test-harness.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-ui-sidebar-documentpreview",
+        "@deepseek-ai/dsh-api-workspace-files"
+      ]
+    }
+  },
+  "keywords": [
+    "dsh-plugin",
+    "dsh",
+    "deepseek-harness",
+    "blender",
+    "blend",
+    "glb",
+    "preview",
+    "3d",
+    "webgl"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adithyanraj03/dsh-blender-preview.git"
+  },
+  "homepage": "https://adithyanraj03.github.io/dsh-blender-preview/",
+  "bugs": {
+    "url": "https://github.com/adithyanraj03/dsh-blender-preview/issues"
+  },
+  "author": {
+    "name": "Adithya N Raj",
+    "url": "https://github.com/adithyanraj03"
+  },
+  "icon": "assets/icon.png",
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}

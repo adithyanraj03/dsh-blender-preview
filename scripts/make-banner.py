@@ -120,7 +120,10 @@ def fit_title(d: ImageDraw.ImageDraw, text: str, x0: int, x1: int, start: int) -
     return ImageFont.truetype(FONT_BOLD, size)
 
 
-ICON = Image.open(ASSETS / "icon.png").convert("RGBA").resize((250, 250), Image.LANCZOS)
+# The banner's left tile uses its own logo (banner-icon.png) when present;
+# it falls back to the app icon. The app icon (icon.png) is unchanged.
+_BANNER_TILE = ASSETS / "banner-icon.png"
+ICON = Image.open(_BANNER_TILE if _BANNER_TILE.exists() else ASSETS / "icon.png").convert("RGBA").resize((250, 250), Image.LANCZOS)
 
 
 def banner(bg: tuple, ink: tuple, tag: tuple, card_fill: tuple, out: str):

@@ -13,7 +13,7 @@ English | [中文](README.zh-CN.md)
 
 A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin that will preview Blender `.blend` files in the right sidebar: the host half exports a cached GLB headlessly through your local Blender install, and the browser half renders it in an interactive WebGL viewport with scene statistics.
 
-> **Status: scaffold (v0.1.0).** This release publishes the wiring, not the feature: the bundle row mounts, the package makes no network calls and collects no telemetry, and nothing previews a scene yet. The headless-GLB export and the WebGL viewport land in the next version.
+> **Status: scaffold (v0.2.0).** This release publishes the wiring, not the feature: the bundle row mounts, the package ships `dsh-blender@^0.2.4` as a dependency with a non-mutating boot self-check, makes no network calls and collects no telemetry, and nothing previews a scene yet. The headless-GLB export and the WebGL viewport land in the next version.
 
 ## Install
 
@@ -29,7 +29,7 @@ Or straight from GitHub:
 npx @deepseek-ai/dsh plugin --profile web add github:adithyanraj03/dsh-blender-preview
 ```
 
-The package runs no install scripts (no `postinstall`), so pnpm's ignored-builds prompt does not apply. Confirm it mounted — the plugin must appear in **both** `dependencies` and `dsh.profile.bundles`:
+The package runs no install scripts (no `postinstall`), so pnpm's ignored-builds prompt does not apply. Installing it also pulls one dependency, `dsh-blender@^0.2.4`, into the profile alongside — see [Works with dsh-blender](#works-with-dsh-blender). Confirm it mounted — the plugin must appear in **both** `dependencies` and `dsh.profile.bundles`:
 
 ```sh
 cd ~/.dsh/profiles/web && node -e "const p=require('./package.json');
@@ -55,6 +55,18 @@ Installed plugins do not update automatically yet — to upgrade, uninstall and 
 
 The planned feature, in one line: a local `blender --background` process exports the active `.blend` to a cached GLB (re-exported only when the file changes), and the right sidebar renders that GLB in an interactive WebGL viewport with scene statistics. Everything runs against your local Blender installation — no cloud, no API keys.
 
+## Works with dsh-blender
+
+This package declares [`dsh-blender`](https://github.com/cheshirejcat/blender) (npm `dsh-blender`) by [CheshireJCat](https://github.com/cheshirejcat) as a dependency, so a registry or GitHub install puts `dsh-blender@^0.2.4` into the profile next to this plugin. At boot, the host half runs a **non-mutating self-check**: for every profile that depends on this package it verifies that `dsh-blender` is installed in that profile and mounted in its `dsh.profile.bundles`, and when either is missing it logs the exact one-liner that repairs it:
+
+```sh
+npx @deepseek-ai/dsh plugin --profile web add dsh-blender
+```
+
+The self-check reads; it never installs or edits anything itself. This matters for `link:` dev profiles, where pnpm does not install the linked package's own dependencies — the check reports the gap instead of assuming it away.
+
+**Credit:** `dsh-blender` is a community plugin by [CheshireJCat](https://github.com/cheshirejcat) — Blender modelling tools and skills for dsh.
+
 ## Prior art
 
 `dsh-blend-preview` on npm is taken and deprecated; its author renamed it to `dsh-preview-blender`, which already implements headless-GLB + WebGL sidebar preview. This is an independent implementation under the `dsh-blender-preview` name, verified available on npm when this scaffold was created.
@@ -70,7 +82,7 @@ Layout mirrors [dsh-graft](https://github.com/adithyanraj03/dsh-graft-plugin):
 
 | Path | Role |
 | --- | --- |
-| `src/index.js` | host half — Blender resolution + cached GLB export (stub) |
+| `src/index.js` | host half — dsh-blender boot self-check, then Blender resolution + cached GLB export (stub) |
 | `src/client.js` | browser half — sidebar tab + WebGL viewport (stub) |
 | `cordis.patch.yml` | mounts the host row; `name` must equal the package name |
 | `scripts/test-harness.mjs` | dependency-free wiring test |

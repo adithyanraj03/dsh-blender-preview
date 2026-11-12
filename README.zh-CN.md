@@ -13,7 +13,7 @@
 
 一个 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 插件，将用于在右侧边栏预览 Blender `.blend` 文件：宿主半区通过本机 Blender 以无头模式导出带缓存的 GLB，浏览器半区在可交互的 WebGL 视口中渲染，并显示场景统计信息。
 
-> **状态：脚手架（v0.1.0）。** 本版本发布的是项目接线，而非功能本身：bundle 行可以挂载，包不发起任何网络请求、不收集任何遥测，也尚未预览任何场景。无头 GLB 导出与 WebGL 视口将在后续版本落地。
+> **状态：脚手架（v0.2.0）。** 本版本发布的是项目接线，而非功能本身：bundle 行可以挂载，包将 `dsh-blender@^0.2.4` 作为依赖随包发布（启动时进行非变更式自检），不发起任何网络请求、不收集任何遥测，也尚未预览任何场景。无头 GLB 导出与 WebGL 视口将在后续版本落地。
 
 ## 安装
 
@@ -29,7 +29,7 @@ npx @deepseek-ai/dsh plugin --profile web add dsh-blender-preview
 npx @deepseek-ai/dsh plugin --profile web add github:adithyanraj03/dsh-blender-preview
 ```
 
-本包不运行任何安装脚本（无 `postinstall`），因此不会触发 pnpm 的 ignored-builds 提示。确认挂载成功——插件必须**同时**出现在 `dependencies` 和 `dsh.profile.bundles` 中：
+本包不运行任何安装脚本（无 `postinstall`），因此不会触发 pnpm 的 ignored-builds 提示。安装时会随本插件在 profile 中一并拉取一个依赖 `dsh-blender@^0.2.4`——见[与 dsh-blender 配合使用](#与-dsh-blender-配合使用)。确认挂载成功——插件必须**同时**出现在 `dependencies` 和 `dsh.profile.bundles` 中：
 
 ```sh
 cd ~/.dsh/profiles/web && node -e "const p=require('./package.json');
@@ -55,6 +55,18 @@ https://github.com/adithyanraj03/dsh-blender-preview
 
 计划中的功能，一句话概括：本地 `blender --background` 进程将当前 `.blend` 导出为带缓存的 GLB（仅在文件变化时重新导出），右侧边栏在可交互的 WebGL 视口中渲染该 GLB 并显示场景统计信息。一切均基于本机 Blender 安装——无云服务、无 API 密钥。
 
+## 与 dsh-blender 配合使用
+
+本包将 [CheshireJCat](https://github.com/cheshirejcat) 的 [`dsh-blender`](https://github.com/cheshirejcat/blender)（npm 包名 `dsh-blender`）声明为依赖，因此从 npm 或 GitHub 安装时，`dsh-blender@^0.2.4` 会与本插件一起进入 profile。启动时，宿主半区执行**非变更式自检**：对每个依赖本包的 profile，检查 `dsh-blender` 是否已安装、且已挂载进该 profile 的 `dsh.profile.bundles`；任一缺失时，日志中给出可直接执行的修复命令：
+
+```sh
+npx @deepseek-ai/dsh plugin --profile web add dsh-blender
+```
+
+自检只读，从不自行安装或修改任何内容。这对 `link:` 开发型 profile 尤为重要——pnpm 不会为被链接的包安装其自身依赖，自检会如实报告缺口而不是默认其存在。
+
+**致谢：** `dsh-blender` 是 [CheshireJCat](https://github.com/cheshirejcat) 的社区插件——面向 dsh 的 Blender 建模工具与技能集。
+
 ## 已有同类插件
 
 npm 上的 `dsh-blend-preview` 已被占用且已弃用；其作者将其更名为 `dsh-preview-blender`，后者已实现无头 GLB + WebGL 侧边栏预览。本插件是以 `dsh-blender-preview` 名称（创建脚手架时已验证该名称在 npm 可用）进行的独立实现。
@@ -70,7 +82,7 @@ python scripts/make-banner.py   # 重新生成 README 横幅（Pillow）
 
 | 路径 | 职责 |
 | --- | --- |
-| `src/index.js` | 宿主半区——Blender 解析 + 带缓存的 GLB 导出（占位） |
+| `src/index.js` | 宿主半区——dsh-blender 启动自检，随后为 Blender 解析 + 带缓存的 GLB 导出（占位） |
 | `src/client.js` | 浏览器半区——侧边栏标签 + WebGL 视口（占位） |
 | `cordis.patch.yml` | 挂载宿主行；`name` 必须与包名一致 |
 | `scripts/test-harness.mjs` | 无依赖接线测试 |

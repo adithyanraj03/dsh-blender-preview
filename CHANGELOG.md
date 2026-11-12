@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Release notes live on [GitHub Releases](https://github.com/adithyanraj03/dsh-blender-preview/releases);
 npm versions: [dsh-blender-preview](https://www.npmjs.com/package/dsh-blender-preview).
 
+## [0.2.0] — 2026-11-12
+
+### Added
+
+- `dsh-blender` (npm, by CheshireJCat) as a package dependency: registry or GitHub installs place `dsh-blender@^0.2.4` into the profile alongside this plugin.
+- Boot self-check (host half, read-only): for every profile that depends on this package, verifies `dsh-blender` is installed there and mounted in its `dsh.profile.bundles`; when either is missing it logs the exact one-liner that repairs it — the row never installs or edits anything itself.
+- README (EN + zh): "Works with dsh-blender" section with credit to CheshireJCat; updated the disclosure description to cover the new dependency and self-check.
+
 ## [0.1.0] — 2026-11-12
 
 ### Added

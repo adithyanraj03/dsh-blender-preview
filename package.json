@@ -1,7 +1,10 @@
 {
   "name": "dsh-blender-preview",
-  "version": "0.1.0",
-  "description": "Scaffold for a DeepSeek Harness Blender preview plugin: mounts one host row with no UI yet, no network calls and no telemetry of its own; the planned feature exports .blend files to a cached local GLB via a local Blender install (no cloud, no keys), the package runs no postinstall, and uninstall removes the row.",
+  "version": "0.2.0",
+  "description": "Scaffold for a DeepSeek Harness Blender preview plugin: one host row, no UI yet, no network calls, no telemetry; depends on dsh-blender@^0.2.4 (at boot it only checks that dsh-blender is installed and mounted in the profiles that use it, logging the exact mount command when not — non-mutating); planned feature: .blend to cached local GLB via local Blender; no postinstall; uninstall removes the row.",
+  "dependencies": {
+    "dsh-blender": "^0.2.4"
+  },
   "type": "module",
   "main": "src/index.js",
   "exports": {

@@ -9,11 +9,11 @@
 
 English | [中文](README.zh-CN.md)
 
-![language](https://img.shields.io/badge/language-javascript-f7dc6f) ![license](https://img.shields.io/badge/license-MIT-blue) ![node](https://img.shields.io/badge/node-%E2%89%A5%2022-brightgreen) ![dsh](https://img.shields.io/badge/dsh-web_%2B_desktop-orange) ![status](https://img.shields.io/badge/status-scaffold-orange) ![tests](https://img.shields.io/badge/tests-wiring_passing-brightgreen)
+![language](https://img.shields.io/badge/language-javascript-f7dc6f) ![license](https://img.shields.io/badge/license-MIT-blue) ![node](https://img.shields.io/badge/node-%E2%89%A5%2022-brightgreen) ![dsh](https://img.shields.io/badge/dsh-web_%2B_desktop-orange) ![status](https://img.shields.io/badge/status-v0.3.0-blue) ![tests](https://img.shields.io/badge/tests-8%2F8_passing-brightgreen)
 
-A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin that will preview Blender `.blend` files in the right sidebar: the host half exports a cached GLB headlessly through your local Blender install, and the browser half renders it in an interactive WebGL viewport with scene statistics.
+A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin that previews Blender `.blend` files (and more) in the right sidebar's Files tab: the host half exports a cached GLB headlessly through your local Blender install, and the browser half renders it in an interactive WebGL viewport with scene statistics.
 
-> **Status: scaffold (v0.2.0).** This release publishes the wiring, not the feature: the bundle row mounts, the package ships `dsh-blender@^0.2.4` as a dependency with a non-mutating boot self-check, makes no network calls and collects no telemetry, and nothing previews a scene yet. The headless-GLB export and the WebGL viewport land in the next version.
+> **Status: v0.3.0 — the preview works.** `.blend` / `.glb` / `.gltf` / `.obj` open in a 3D viewport, `.svg` in a pixel-true vector viewer, and video/audio stream with seek. The package ships `dsh-blender@^0.2.4` as a dependency with a non-mutating boot self-check, makes no network calls and collects no telemetry. `.blend` conversion needs a local Blender installation; the other formats work without one.
 
 ## Install
 
@@ -47,13 +47,21 @@ https://github.com/adithyanraj03/dsh-blender-preview
 
 Installed plugins do not update automatically yet — to upgrade, uninstall and install again. The host half loads at startup, so restart the app after installing or upgrading.
 
-## What this scaffold ships today
+## What it does
 
-- The host row (`id: blender-preview`) mounts on dsh web and desktop. The row id is permanent from this release forward — later versions replace the row's config, never its id.
-- `npm test` — a dependency-free wiring harness that checks the three places the package name lives agree and that every shipped file exists.
-- The bilingual README pair, the documentation site (GitHub Pages), and the release process: every release ships a `plugin.tgz` asset with detailed notes.
+- **3D viewport** for `.blend`, `.glb`, `.gltf`, `.obj`: drag to orbit, right-drag to pan, scroll to zoom, plus reset-view, spin, wireframe, grid and light-background toggles. Scene chips show triangle / mesh / material counts, animation count and whether the model is rigged.
+- **`.blend` conversion** runs your local Blender in the background (`blender -b --factory-startup … --python export_glb.py`) and caches the GLB under `<DSH_HOME>/storages/blender-preview`, keyed by path + size + mtime (or by content for uploaded bytes). Reopening the same file is instant; an edited file converts again.
+- **Animation playback**: clip picker, play/pause, a scrub bar and speed control when the model carries clips.
+- **`.svg`** renders as a vector drawing with pixel-true zoom and pan.
+- **Video / audio** stream over HTTP ranges, so a multi-gigabyte file seeks without being read into memory.
 
-The planned feature, in one line: a local `blender --background` process exports the active `.blend` to a cached GLB (re-exported only when the file changes), and the right sidebar renders that GLB in an interactive WebGL viewport with scene statistics. Everything runs against your local Blender installation — no cloud, no API keys.
+Row config (all optional, on the `blender-preview` row):
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `blenderPath` | auto-detected (`BLENDER_PATH`, common install dirs, PATH) | the Blender executable |
+| `timeoutMs` | `180000` | longest one export may take |
+| `cacheDir` | `<DSH_HOME>/storages/blender-preview` | where converted GLBs are kept |
 
 ## Works with dsh-blender
 
@@ -69,24 +77,29 @@ The self-check reads; it never installs or edits anything itself. This matters f
 
 ## Prior art
 
-`dsh-blend-preview` on npm is taken and deprecated; its author renamed it to `dsh-preview-blender`, which already implements headless-GLB + WebGL sidebar preview. This is an independent implementation under the `dsh-blender-preview` name, verified available on npm when this scaffold was created.
+`dsh-blend-preview` on npm is taken and deprecated; its author renamed it to `dsh-preview-blender`, which already implements headless-GLB + WebGL sidebar preview. This is an independent implementation under the `dsh-blender-preview` name, verified available on npm when this plugin was created.
 
 ## Development
 
 ```sh
-npm test                        # wiring harness
+npm install                     # dev deps: three + esbuild-wasm (no native esbuild, no postinstall)
+npm run build                   # bundle src/client -> lib/client.js (esbuild-wasm)
+npm test                        # wiring harness + unit tests + e2e export
+BLEND_SAMPLE=/path/to/file.blend npm test   # include the real Blender .blend->GLB e2e test
 python scripts/make-banner.py   # regenerate the README banners (Pillow)
 ```
 
-Layout mirrors [dsh-graft](https://github.com/adithyanraj03/dsh-graft-plugin):
-
 | Path | Role |
 | --- | --- |
-| `src/index.js` | host half — dsh-blender boot self-check, then Blender resolution + cached GLB export (stub) |
-| `src/client.js` | browser half — sidebar tab + WebGL viewport (stub) |
+| `src/index.js` | host half — dsh-blender boot self-check, convert/media/status routes |
+| `src/convert.js` | Blender resolution, headless export, on-disk GLB cache |
+| `src/export_glb.py` | the Blender-side export script |
+| `src/client/` | browser half sources — viewport, SVG, media, registration |
+| `lib/client.js` | built browser bundle (generated by `build.mjs`) |
+| `build.mjs` | esbuild-wasm bundler wrapped in dsh's module loader |
 | `cordis.patch.yml` | mounts the host row; `name` must equal the package name |
 | `scripts/test-harness.mjs` | dependency-free wiring test |
-| `scripts/make-banner.py` | regenerates `assets/banner-*.png` |
+| `test/preview.test.mjs` | unit + cache + Blender e2e tests |
 | `docs/` | GitHub Pages site |
 | `assets/` | icon and banners |
 
@@ -94,9 +107,9 @@ Layout mirrors [dsh-graft](https://github.com/adithyanraj03/dsh-graft-plugin):
 
 | Host | Status |
 | --- | --- |
-| dsh 0.2.x (web + desktop) | row mounts; feature not implemented |
+| dsh 0.2.x (web + desktop) | working; restart after install/upgrade so the host half loads |
 
-The feature will require a local Blender installation at runtime (resolution logic lands with the implementation).
+`.blend` conversion requires a local Blender installation (tested against Blender 5.2 LTS). `.glb` / `.gltf` / `.obj` / `.svg` / video / audio previews work without Blender.
 
 ## License
 

@@ -27,10 +27,21 @@ assert.equal(rowName, pkg.name, 'cordis.patch.yml row name must equal package.js
 const rowId = /-\s*id:\s*([^\s'"]+)/.exec(patch)?.[1]
 assert.ok(rowId, 'cordis.patch.yml insert row must carry an id')
 
-// 3. The client loader id must equal the package name too.
-const client = readFileSync(join(root, 'src/client.js'), 'utf8')
-const loaderId = /id:\s*["']([^"']+)["']/.exec(client)?.[1]
-assert.equal(loaderId, pkg.name, 'src/client.js loader id must equal package.json name')
+// 3. The client loader id (build.mjs wrapper) must equal the cordis row id.
+const build = readFileSync(join(root, 'build.mjs'), 'utf8')
+const loaderId = /id:\s*["']([^"']+)["']/.exec(build)?.[1]
+assert.equal(loaderId, rowId, 'build.mjs loader id must equal the cordis row id')
+const builtClient = join(root, 'lib/client.js')
+if (existsSync(builtClient)) {
+  const builtId = /id:\s*["']([^"']+)["']/.exec(readFileSync(builtClient, 'utf8'))?.[1]
+  assert.equal(builtId, rowId, 'lib/client.js loader id must equal the cordis row id')
+}
+
+// 3b. Host and client HTTP base must agree with the row id.
+const hostBase = /export const BASE = '([^']+)'/.exec(readFileSync(join(root, 'src/index.js'), 'utf8'))?.[1]
+const clientBase = /export const BASE = '([^']+)'/.exec(readFileSync(join(root, 'src/client/util.js'), 'utf8'))?.[1]
+assert.equal(hostBase, `/plugin-data/${rowId}`, 'host BASE must match the row id')
+assert.equal(clientBase, hostBase, 'client BASE must match host BASE')
 
 // 4. main + every exports target exists.
 assert.ok(existsSync(join(root, pkg.main)), `main missing: ${pkg.main}`)
@@ -47,4 +58,4 @@ for (const file of pkg.files ?? []) {
 assert.equal(pkg.dsh?.bundle?.patch, './cordis.patch.yml')
 assert.ok(existsSync(patchPath), 'cordis.patch.yml missing')
 
-console.log(`PASS ${pkg.name}: row name/id + loader id agree; main, exports and files all present`)
+console.log(`PASS ${pkg.name}: row name/id + loader id + HTTP base agree; main, exports and files all present`)

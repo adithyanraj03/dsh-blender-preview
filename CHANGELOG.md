@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Release notes live on [GitHub Releases](https://github.com/adithyanraj03/dsh-blender-preview/releases);
 npm versions: [dsh-blender-preview](https://www.npmjs.com/package/dsh-blender-preview).
 
+## [0.3.0] — 2026-11-17
+
+### Added
+
+- The preview feature itself, ported from the maintainer's working `blend-preview` implementation: `.blend` / `.glb` / `.gltf` / `.obj` in an interactive WebGL viewport (orbit/pan/zoom, wireframe, grid, spin, light background, scene-stat chips), animation playback (clip picker, scrub bar, speed), `.svg` pixel-true vector preview, and HTTP-range streamed video/audio.
+- Headless `.blend` → GLB export through the user's local Blender (`src/convert.js` + `src/export_glb.py`), cached under `<DSH_HOME>/storages/blender-preview` keyed by path+size+mtime (or content for uploaded bytes); re-exports only when the file changes.
+- Host routes `/plugin-data/blender-preview/{convert,convert-bytes,media,status}`; row config `blenderPath`, `timeoutMs`, `cacheDir`.
+- Browser half built with esbuild-wasm (`build.mjs` → `lib/client.js`); dev deps `three` + `esbuild-wasm` only (no native esbuild, no postinstall).
+- Test suite (`test/preview.test.mjs`): host helper units, cache behaviour, and a real Blender `.blend`→GLB e2e test gated on `BLEND_SAMPLE` (8/8 passing against Blender 5.2 LTS).
+
+### Changed
+
+- Row id, client loader id, preview ids, HTTP base and cache dir renamed `blend-preview` → `blender-preview`; package name stays `dsh-blender-preview`.
+- The 0.2.0 `dsh-blender` dependency and read-only boot self-check are retained inside the ported host half.
+- Disclosure description rewritten to match shipped behaviour (Files-tab previews, local-Blender requirement, no network/telemetry/postinstall).
+
 ## [0.2.0] — 2026-11-12
 
 ### Added

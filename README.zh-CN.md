@@ -9,11 +9,11 @@
 
 [English](README.md) | 中文
 
-![language](https://img.shields.io/badge/language-javascript-f7dc6f) ![license](https://img.shields.io/badge/license-MIT-blue) ![node](https://img.shields.io/badge/node-%E2%89%A5%2022-brightgreen) ![dsh](https://img.shields.io/badge/dsh-web_%2B_desktop-orange) ![status](https://img.shields.io/badge/status-scaffold-orange) ![tests](https://img.shields.io/badge/tests-wiring_passing-brightgreen)
+![language](https://img.shields.io/badge/language-javascript-f7dc6f) ![license](https://img.shields.io/badge/license-MIT-blue) ![node](https://img.shields.io/badge/node-%E2%89%A5%2022-brightgreen) ![dsh](https://img.shields.io/badge/dsh-web_%2B_desktop-orange) ![status](https://img.shields.io/badge/status-v0.3.0-blue) ![tests](https://img.shields.io/badge/tests-8%2F8_passing-brightgreen)
 
-一个 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 插件，将用于在右侧边栏预览 Blender `.blend` 文件：宿主半区通过本机 Blender 以无头模式导出带缓存的 GLB，浏览器半区在可交互的 WebGL 视口中渲染，并显示场景统计信息。
+一个 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 插件，在右侧边栏的 Files 标签中预览 Blender `.blend` 文件（以及更多格式）：宿主半区通过本机 Blender 以无头模式导出带缓存的 GLB，浏览器半区在可交互的 WebGL 视口中渲染，并显示场景统计信息。
 
-> **状态：脚手架（v0.2.0）。** 本版本发布的是项目接线，而非功能本身：bundle 行可以挂载，包将 `dsh-blender@^0.2.4` 作为依赖随包发布（启动时进行非变更式自检），不发起任何网络请求、不收集任何遥测，也尚未预览任何场景。无头 GLB 导出与 WebGL 视口将在后续版本落地。
+> **状态：v0.3.0——预览功能已可用。** `.blend` / `.glb` / `.gltf` / `.obj` 在 3D 视口中打开，`.svg` 以像素级精确的矢量查看器呈现，视频/音频以可拖动进度的流式方式播放。本包将 `dsh-blender@^0.2.4` 作为依赖随包发布（启动时进行非变更式自检），不发起任何网络请求、不收集任何遥测。`.blend` 转换需要本机安装 Blender；其余格式无需 Blender 即可预览。
 
 ## 安装
 
@@ -47,13 +47,21 @@ https://github.com/adithyanraj03/dsh-blender-preview
 
 已安装的插件尚不支持自动更新——升级时需先卸载再重新安装。宿主半区在启动时加载，因此安装或升级后需重启应用。
 
-## 本脚手架版本包含的内容
+## 功能
 
-- 宿主行（`id: blender-preview`）可在 dsh web 与桌面版上挂载。行 id 自本版本起永久固定——后续版本只替换行的 config，不改变 id。
-- `npm test`——无依赖的接线测试：检查包名在三个位置（package.json、cordis.patch.yml、src/client.js）一致，且所有随包文件均存在。
-- 双语 README、文档站点（GitHub Pages），以及发布流程：每个 release 均附带 `plugin.tgz` 资源与详细说明。
+- **3D 视口**：支持 `.blend`、`.glb`、`.gltf`、`.obj`。拖拽旋转、右键拖拽平移、滚轮缩放，并提供重置视角、自转、线框、网格与浅色背景开关。场景标签显示三角面/网格/材质数量、动画数量以及是否带绑定。
+- **`.blend` 转换**：在后台调用本机 Blender（`blender -b --factory-startup … --python export_glb.py`），并将 GLB 缓存于 `<DSH_HOME>/storages/blender-preview`，以路径 + 大小 + 修改时间（上传字节则按内容）为键。重复打开同一文件即时完成；文件被修改后才会重新转换。
+- **动画播放**：模型带动画时提供片段选择、播放/暂停、进度条与倍速控制。
+- **`.svg`**：以矢量方式渲染，支持像素级精确的缩放与平移。
+- **视频 / 音频**：通过 HTTP Range 流式传输，数 GB 的文件也可拖动进度而无需整体读入内存。
 
-计划中的功能，一句话概括：本地 `blender --background` 进程将当前 `.blend` 导出为带缓存的 GLB（仅在文件变化时重新导出），右侧边栏在可交互的 WebGL 视口中渲染该 GLB 并显示场景统计信息。一切均基于本机 Blender 安装——无云服务、无 API 密钥。
+行配置（均可选，位于 `blender-preview` 行）：
+
+| 键 | 默认值 | 含义 |
+| --- | --- | --- |
+| `blenderPath` | 自动探测（`BLENDER_PATH`、常见安装目录、PATH） | Blender 可执行文件 |
+| `timeoutMs` | `180000` | 单次导出的最长耗时 |
+| `cacheDir` | `<DSH_HOME>/storages/blender-preview` | 转换后 GLB 的存放位置 |
 
 ## 与 dsh-blender 配合使用
 
@@ -69,24 +77,29 @@ npx @deepseek-ai/dsh plugin --profile web add dsh-blender
 
 ## 已有同类插件
 
-npm 上的 `dsh-blend-preview` 已被占用且已弃用；其作者将其更名为 `dsh-preview-blender`，后者已实现无头 GLB + WebGL 侧边栏预览。本插件是以 `dsh-blender-preview` 名称（创建脚手架时已验证该名称在 npm 可用）进行的独立实现。
+npm 上的 `dsh-blend-preview` 已被占用且已弃用；其作者将其更名为 `dsh-preview-blender`，后者已实现无头 GLB + WebGL 侧边栏预览。本插件是以 `dsh-blender-preview` 名称（创建时已验证该名称在 npm 可用）进行的独立实现。
 
 ## 开发
 
 ```sh
-npm test                        # 接线测试
+npm install                     # 开发依赖：three + esbuild-wasm（无原生 esbuild，无 postinstall）
+npm run build                   # 将 src/client 打包为 lib/client.js（esbuild-wasm）
+npm test                        # 接线测试 + 单元测试 + e2e 导出
+BLEND_SAMPLE=/path/to/file.blend npm test   # 启用真实 Blender .blend->GLB e2e 测试
 python scripts/make-banner.py   # 重新生成 README 横幅（Pillow）
 ```
 
-目录结构沿用 [dsh-graft](https://github.com/adithyanraj03/dsh-graft-plugin)：
-
 | 路径 | 职责 |
 | --- | --- |
-| `src/index.js` | 宿主半区——dsh-blender 启动自检，随后为 Blender 解析 + 带缓存的 GLB 导出（占位） |
-| `src/client.js` | 浏览器半区——侧边栏标签 + WebGL 视口（占位） |
+| `src/index.js` | 宿主半区——dsh-blender 启动自检、convert/media/status 路由 |
+| `src/convert.js` | Blender 探测、无头导出、磁盘 GLB 缓存 |
+| `src/export_glb.py` | Blender 侧导出脚本 |
+| `src/client/` | 浏览器半区源码——视口、SVG、媒体、注册 |
+| `lib/client.js` | 构建后的浏览器 bundle（由 `build.mjs` 生成） |
+| `build.mjs` | esbuild-wasm 打包器，包裹进 dsh 模块加载器 |
 | `cordis.patch.yml` | 挂载宿主行；`name` 必须与包名一致 |
 | `scripts/test-harness.mjs` | 无依赖接线测试 |
-| `scripts/make-banner.py` | 重新生成 `assets/banner-*.png` |
+| `test/preview.test.mjs` | 单元 + 缓存 + Blender e2e 测试 |
 | `docs/` | GitHub Pages 站点 |
 | `assets/` | 图标与横幅 |
 
@@ -94,9 +107,9 @@ python scripts/make-banner.py   # 重新生成 README 横幅（Pillow）
 
 | 宿主 | 状态 |
 | --- | --- |
-| dsh 0.2.x（web + 桌面版） | 行可挂载；功能未实现 |
+| dsh 0.2.x（web + 桌面版） | 可用；安装/升级后需重启以加载宿主半区 |
 
-功能实现后，运行时需要本机安装 Blender（路径解析逻辑随功能实现一起提供）。
+`.blend` 转换需要本机安装 Blender（已针对 Blender 5.2 LTS 测试）。`.glb` / `.gltf` / `.obj` / `.svg` / 视频 / 音频预览无需 Blender。
 
 ## 许可证
 
